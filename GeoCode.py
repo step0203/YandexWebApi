@@ -1,5 +1,5 @@
 import requests
-
+import math
 
 def get_toponym(toponym_to_find):
     geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
@@ -45,3 +45,45 @@ def get_spn(toponym_to_find):
         return f"{dx},{dy}"
     else:
         return None, None
+
+def get_org(address_ll, spn, text):
+    search_api_server = "https://search-maps.yandex.ru/v1/"
+    api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+
+    api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+    # toponym_to_find = " ".join(sys.argv[1:])
+    toponym_to_find = "Тольятти, Ворошилова 24"
+    toponym_longitude, toponym_lattitude = get_ll(toponym_to_find)
+    address_ll = f"{toponym_longitude},{toponym_lattitude}"
+    delta = "0.005,0.005"
+
+    search_params = {
+        "apikey": api_key,
+        "text": "аптека",
+        "lang": "ru_RU",
+        "ll": address_ll,
+        "type": "biz",
+        "spn": delta
+    }
+
+    response = requests.get(search_api_server, params=search_params)
+    if response:
+        # Преобразуем ответ в json-объект
+        json_response = response.json()
+
+        # Получаем первую найденную организацию.
+        organization = json_response["features"]
+        if organization:
+            org = organization[0]
+            return org
+    else:
+        raise RuntimeError(f"Error: {response.status_code}")
+
+def get_distance(a, b):
+    long_a = float(a[0])
+    lat_a = float(a[1])
+    long_b = float(b[0])
+    lat_b = float(b[1])
+    d = 111.2 * math.acos(math.sin(lat_a) * math.sin(lat_b) + math.cos(lat_a) * math.cos(lat_b) * math.cos(long_b-long_a))
+    return d
+
